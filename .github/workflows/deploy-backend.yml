@@ -34,4 +34,4 @@ jobs:
           server-dir: /public_html/
 
       - name: 4. Kích hoạt giải nén từ xa trên Host
-        run: curl -s https://ahcinema.click/unzip.php
+        run: php -r "echo file_get_contents('https://ahcinema.click/unzip.php');"
