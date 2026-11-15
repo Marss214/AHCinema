@@ -17,12 +17,10 @@ jobs:
       - name: 2. Đóng gói Zip (Loại bỏ vendor) & Tạo tool giải nén
         run: |
           mkdir deploy_dist
-          cd backend # Chui vào thư mục backend trước
-          # Nén toàn bộ file trong backend, đẩy ra thư mục deploy_dist ở ngoài
+          cd backend
           zip -q -r ../deploy_dist/deploy.zip . -x "*.git*" "node_modules/*" "vendor/*"
           cd ..
-          # Tạo file giải nén
-          echo "<?php \$z = new ZipArchive; if(\$z->open('deploy.zip') === TRUE) { \$z->extractTo('./'); \$z->close(); unlink('deploy.zip'); unlink('unzip.php'); echo 'Thanh cong'; } else { echo 'Loi'; } ?>" > deploy_dist/unzip.php
+          echo "<?php ini_set('display_errors', 1); error_reporting(E_ALL); \$z = new ZipArchive; if(\$z->open('deploy.zip') === TRUE) { if(\$z->extractTo('./')) { \$z->close(); unlink('deploy.zip'); unlink('unzip.php'); echo 'Thanh cong'; } else { echo 'Loi giai nen'; } } else { echo 'Khong the mo file zip'; } ?>" > deploy_dist/unzip.php
 
       - name: 3. Bắn 2 file lên cPanel qua FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
