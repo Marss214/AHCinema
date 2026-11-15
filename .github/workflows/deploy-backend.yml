@@ -23,7 +23,7 @@ jobs:
           cd ..
           # Tạo file giải nén
           echo "<?php \$z = new ZipArchive; if(\$z->open('deploy.zip') === TRUE) { \$z->extractTo('./'); \$z->close(); unlink('deploy.zip'); unlink('unzip.php'); echo 'Thanh cong'; } else { echo 'Loi'; } ?>" > deploy_dist/unzip.php
-          
+
       - name: 3. Bắn 2 file lên cPanel qua FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -31,7 +31,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./deploy_dist/
-          server-dir: / # Đảm bảo dấu / trỏ đúng vào thư mục gốc chứa code trên host
+          server-dir: /public_html/
 
       - name: 4. Kích hoạt giải nén từ xa trên Host
         run: curl -s https://ahcinema.click/unzip.php
