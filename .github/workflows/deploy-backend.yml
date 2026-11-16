@@ -21,7 +21,7 @@ jobs:
           cd backend
           zip -q -r ../deploy_dist/deploy.zip . -x "*.git*" "node_modules/*" "vendor/*"
           cd ..
-          echo "<?php ini_set('display_errors', 1); error_reporting(E_ALL); \$z = new ZipArchive; \$zipPath = __DIR__ . '/../deploy.zip'; \$extractPath = __DIR__ . '/../'; if(\$z->open(\$zipPath) === TRUE) { if(\$z->extractTo(\$extractPath)) { \$z->close(); unlink(\$zipPath); unlink(__FILE__); echo 'Thanh cong'; } else { echo 'Loi giai nen'; } } else { echo 'Khong mo duoc file zip'; } ?>" > deploy_dist/public/update_core.php
+          echo "<?php ini_set('display_errors', 1); error_reporting(E_ALL); \$z = new ZipArchive; \$zipPath = dirname(__FILE__) . '/../deploy.zip'; \$extractPath = dirname(__FILE__) . '/../'; if(\$z->open(\$zipPath) === TRUE) { if(\$z->extractTo(\$extractPath)) { \$z->close(); unlink(\$zipPath); unlink(__FILE__); echo 'THANH_CONG'; } else { echo 'LOI_GIAI_NEN'; } } else { echo 'LOI_MO_FILE'; } ?>" > deploy_dist/public/update_core.php
 
       - name: 3. Bắn 2 file lên cPanel qua FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -33,4 +33,6 @@ jobs:
           server-dir: /public_html/
 
       - name: 4. Kích hoạt giải nén từ xa trên Host
-        run: curl -s "https://ahcinema.click/update_core.php?v=$RANDOM"
+        run: |
+          KEY=$(date +%s%N)
+          curl -A "GitHub Actions CI/CD" -sL "https://ahcinema.click/update_core.php?nocache=$KEY"
