@@ -17,6 +17,7 @@ class PhongChieuController extends Controller
 
     public function store(Request $request) {
         // 1. Ràng buộc dữ liệu trước khi lưu
+        //2:
         $request->validate([
             'ten_phong'  => 'required|string|max:255',
             'loai_phong' => 'required|in:2D,3D,IMAX',
