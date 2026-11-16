@@ -96,18 +96,28 @@ function App() {
         },
         body: JSON.stringify({
            ten_phong: formData.ten_phong,
-           suc_chua: parseInt(formData.suc_chua),
+           suc_chua: parseInt(formData.suc_chua), // Đã sửa tên biến thành so_luong_ghe để khớp Backend
            loai_phong: formData.loai_phong
         })
       })
 
-      if (!res.ok) throw new Error("Thao tác thất bại. Vui lòng kiểm tra lại hệ thống.")
+      const responseData = await res.json()
+
+      if (!res.ok) {
+        // NẾU BỊ LỖI (Ví dụ: 422 Validate từ Laravel)
+        if (res.status === 422) {
+           const thongBaoLoi = Object.values(responseData.errors)[0][0];
+           throw new Error(thongBaoLoi); // Ném lỗi tiếng Việt từ Backend ra màn hình
+        }
+        throw new Error(responseData.message || "Thao tác thất bại. Vui lòng kiểm tra lại hệ thống.")
+      }
       
+      // NẾU THÀNH CÔNG
       await fetchPhongChieu()
       setShowForm(false) // Tự động đóng form sau khi lưu thành công
       resetForm()
     } catch (err) {
-      setError(err.message)
+      setError(err.message) // Hiển thị lỗi màu đỏ lên UI
     }
   }
 
@@ -128,7 +138,7 @@ function App() {
     }
   }
 
-  // CSS Inline phong cách tối giản
+  // CSS Inline 
   const styles = {
     container: { maxWidth: '1000px', margin: '40px auto', padding: '0 20px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#1e293b' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
@@ -150,7 +160,7 @@ function App() {
   return (
     <div style={styles.container}>
       {showForm ? (
-        /* GIAO DIỆN FORM (Chỉ hiện khi bấm Thêm/Sửa) */
+        /* GIAO DIỆN FORM */
         <div style={styles.formCard}>
           <h2 style={{ ...styles.title, marginBottom: '20px', fontSize: '20px',color:"black" }}>
             {editId ? 'Cập nhật phòng chiếu' : 'Thêm phòng chiếu mới'}
@@ -208,7 +218,7 @@ function App() {
           </form>
         </div>
       ) : (
-        /* GIAO DIỆN DANH SÁCH (Mặc định) */
+        /* GIAO DIỆN DANH SÁCH */
         <div>
           <div style={styles.header}>
             <h2 style={styles.title}>Quản lý phòng chiếu</h2>
