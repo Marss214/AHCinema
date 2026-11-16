@@ -20,7 +20,7 @@ class PhongChieuController extends Controller
         $request->validate([
             'ten_phong'  => 'required|string|max:255',
             'loai_phong' => 'required|in:2D,3D,IMAX',
-            'so_luong_ghe' => [
+            'suc_chua' => [
                 'required',
                 'integer',
                 function ($attribute, $value, $fail) use ($request) {
@@ -45,7 +45,7 @@ class PhongChieuController extends Controller
         $request->validate([
             'ten_phong'  => 'required|string|max:255',
             'loai_phong' => 'required|in:2D,3D,IMAX',
-            'so_luong_ghe' => [
+            'suc_chua' => [
                 'required',
                 'integer',
                 function ($attribute, $value, $fail) use ($request) {
