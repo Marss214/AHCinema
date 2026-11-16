@@ -13,6 +13,7 @@ class PhongChieuController extends Controller
             'data' => $danhSach
         ], 200);
     }
+//9
 
     public function store(Request $request) {
         // 1. Ràng buộc dữ liệu trước khi lưu
