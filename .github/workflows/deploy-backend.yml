@@ -14,25 +14,12 @@ jobs:
       - name: 1. Lấy code mới nhất từ GitHub
         uses: actions/checkout@v4
 
-      - name: 2. Đóng gói Zip & Tạo tool giải nén
-        run: |
-          mkdir deploy_dist
-          mkdir deploy_dist/public
-          cd backend
-          zip -q -r ../deploy_dist/deploy.zip . -x "*.git*" "node_modules/*" "vendor/*"
-          cd ..
-          echo "<?php ini_set('display_errors', 1); error_reporting(E_ALL); \$z = new ZipArchive; \$zipPath = dirname(__FILE__) . '/../deploy.zip'; \$extractPath = dirname(__FILE__) . '/../'; if(\$z->open(\$zipPath) === TRUE) { if(\$z->extractTo(\$extractPath)) { \$z->close(); unlink(\$zipPath); unlink(__FILE__); echo 'THANH_CONG'; } else { echo 'LOI_GIAI_NEN'; } } else { echo 'LOI_MO_FILE'; } ?>" > deploy_dist/public/update_core.php
-
-      - name: 3. Bắn 2 file lên cPanel qua FTP
+      - name: 2. Đồng bộ trực tiếp code lên cPanel (Bỏ qua file rác)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./deploy_dist/
+          local-dir: ./backend/
           server-dir: /public_html/
-
-      - name: 4. Kích hoạt giải nén từ xa trên Host
-        run: |
-          KEY=$(date +%s%N)
-          curl -A "GitHub Actions CI/CD" -sL "https://ahcinema.click/update_core.php?nocache=$KEY"
+          exclude: "[**/.git*, **/.git*/**, **/node_modules/**, **/vendor/**, **/.env*]"
