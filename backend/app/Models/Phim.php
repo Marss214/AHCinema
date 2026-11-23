@@ -13,6 +13,7 @@ class Phim extends Model
 
     protected $fillable = [
         'tieu_de',
+        'the_loai',
         'mo_ta',
         'thoi_luong',
         'ngay_cong_chieu',

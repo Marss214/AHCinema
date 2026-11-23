@@ -8,13 +8,17 @@ function Home() {
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [activeTab, setActiveTab] = useState('dang_chieu')
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch(`${API_URL}/phim?trang_thai=dang_chieu`)
+        const res = await fetch(`${API_URL}/phim`)
         const data = await res.json()
-        setMovies(Array.isArray(data) ? data : [])
+        const validMovies = Array.isArray(data)
+          ? data.filter((p) => p.trang_thai === 'dang_chieu' || p.trang_thai === 'sap_chieu')
+          : []
+        setMovies(validMovies)
       } catch (err) {
         console.error('Lỗi tải phim trang chủ:', err)
       } finally {
@@ -53,17 +57,22 @@ function Home() {
   if (movies.length === 0) {
     return (
       <div className="home-container" style={{ textAlign: 'center', padding: '80px 24px', color: '#94a3b8' }}>
-        <h2 style={{ color: '#f8fafc', marginBottom: '8px' }}>Chưa có phim đang chiếu</h2>
+        <h2 style={{ color: '#f8fafc', marginBottom: '8px' }}>Chưa có phim nào</h2>
         <p>Hãy vào trang Admin → Quản lý phim để thêm phim mới.</p>
       </div>
     )
   }
 
   const featured = movies[currentIndex] || movies[0]
+  const isComingSoon = featured.trang_thai === 'sap_chieu'
+
+  const dangChieuList = movies.filter((m) => m.trang_thai === 'dang_chieu')
+  const sapChieuList = movies.filter((m) => m.trang_thai === 'sap_chieu')
+  const displayedMovies = activeTab === 'dang_chieu' ? dangChieuList : sapChieuList
 
   return (
     <div className="home-container">
-      {/* Banner phim nổi bật (Slider) */}
+      {/* Banner phim nổi bật (Đang chiếu + Sắp chiếu) */}
       <section className="home-hero">
         <img
           key={featured.id}
@@ -85,15 +94,35 @@ function Home() {
         )}
 
         <div className="home-hero-content">
-          <span className="home-hero-tag">PHIM ĐANG CHIẾU • {featured.thoi_luong} PHÚT</span>
+          <span className={`home-hero-tag ${isComingSoon ? 'coming-soon' : ''}`}>
+            {isComingSoon
+              ? `SẮP CHIẾU • KHỞI CHIẾU ${featured.ngay_cong_chieu || 'SỚM'}`
+              : `PHIM ĐANG CHIẾU • ${featured.thoi_luong} PHÚT`}
+          </span>
+
           <h1 className="home-hero-title">{featured.tieu_de}</h1>
+
+          {featured.the_loai && (
+            <div className="home-hero-genres">
+              {featured.the_loai.split(',').map((tag) => (
+                <span key={tag.trim()} className="home-genre-pill">
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
+          )}
+
           <p className="home-hero-desc">
             {featured.mo_ta ||
               'Đặt vé trực tuyến nhanh chóng, chọn ghế VIP theo thời gian thực tại AHCinema.'}
           </p>
+
           <div className="home-hero-actions">
-            <Link to={`/phim/${featured.id}`} className="home-btn-book">
-              Đặt vé ngay
+            <Link
+              to={`/phim/${featured.id}`}
+              className={isComingSoon ? 'home-btn-coming' : 'home-btn-book'}
+            >
+              {isComingSoon ? 'Xem chi tiết & Trailer' : 'Đặt vé ngay'}
             </Link>
             <Link to="/phim" className="home-btn-detail">
               Xem tất cả phim
@@ -115,42 +144,72 @@ function Home() {
         )}
       </section>
 
-      {/* Danh sách phim đang chiếu */}
+      {/* Khu vực danh sách phim có Tab chuyển đổi */}
       <section>
         <div className="home-section-header">
-          <h2 className="home-section-title">Phim đang chiếu</h2>
+          <div className="home-tabs">
+            <button
+              className={`home-tab-btn ${activeTab === 'dang_chieu' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dang_chieu')}
+            >
+              Phim đang chiếu ({dangChieuList.length})
+            </button>
+            <button
+              className={`home-tab-btn ${activeTab === 'sap_chieu' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sap_chieu')}
+            >
+              Phim sắp chiếu ({sapChieuList.length})
+            </button>
+          </div>
+
           <Link to="/phim" className="home-view-all">
             Xem thêm →
           </Link>
         </div>
 
-        <div className="home-movie-grid">
-          {movies.map((phim) => (
-            <div key={phim.id} className="home-movie-card">
-              <div className="home-poster-wrap">
-                <img
-                  src={phim.anh_poster || '/images/godzilla.jpg'}
-                  alt={phim.tieu_de}
-                  className="home-poster"
-                />
-                <span className="home-rating-badge">{phim.thoi_luong}p</span>
-              </div>
+        {displayedMovies.length === 0 ? (
+          <div className="home-empty-tab">
+            Hiện chưa có phim nào ở mục {activeTab === 'dang_chieu' ? 'Đang chiếu' : 'Sắp chiếu'}.
+          </div>
+        ) : (
+          <div className="home-movie-grid">
+            {displayedMovies.map((phim) => {
+              const phimSapChieu = phim.trang_thai === 'sap_chieu'
+              return (
+                <div key={phim.id} className="home-movie-card">
+                  <div className="home-poster-wrap">
+                    <img
+                      src={phim.anh_poster || '/images/godzilla.jpg'}
+                      alt={phim.tieu_de}
+                      className="home-poster"
+                    />
+                    <span className="home-rating-badge">{phim.thoi_luong}p</span>
+                  </div>
 
-              <div className="home-movie-info">
-                <div>
-                  <h3 className="home-movie-title">{phim.tieu_de}</h3>
-                  <div className="home-movie-meta">
-                    Khởi chiếu: {phim.ngay_cong_chieu || 'Đang cập nhật'}
+                  <div className="home-movie-info">
+                    <div>
+                      <h3 className="home-movie-title">{phim.tieu_de}</h3>
+                      {phim.the_loai && (
+                        <div className="home-movie-genres">{phim.the_loai}</div>
+                      )}
+                      <div className="home-movie-meta">
+                        Khởi chiếu: {phim.ngay_cong_chieu || 'Đang cập nhật'}
+                      </div>
+                    </div>
+
+                    <Link to={`/phim/${phim.id}`} style={{ textDecoration: 'none' }}>
+                      <button
+                        className={`home-card-btn ${phimSapChieu ? 'coming-soon' : ''}`}
+                      >
+                        {phimSapChieu ? 'Xem chi tiết' : 'Đặt vé'}
+                      </button>
+                    </Link>
                   </div>
                 </div>
-
-                <Link to={`/phim/${phim.id}`} style={{ textDecoration: 'none' }}>
-                  <button className="home-card-btn">Đặt vé</button>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )
