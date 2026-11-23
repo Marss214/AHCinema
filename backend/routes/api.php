@@ -3,4 +3,5 @@
 use App\Http\Controllers\PhongChieuController;
 Route::apiResource('phong_chieu', PhongChieuController::class);
 // Fix giai nen....qqqwww
-
+use App\Http\Controllers\PhimController;
+Route::apiResource('phim', PhimController::class);
