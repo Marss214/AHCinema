@@ -3,6 +3,7 @@ import UserLayout from './layouts/UserLayout'
 import AdminLayout from './layouts/AdminLayout'
 import Home from './pages/user/Home'
 import PhongChieu from './pages/admin/PhongChieu'
+import QuanLyPhim from './pages/admin/QuanLyPhim'
 
 const Placeholder = ({ title }) => (
   <div style={{ padding: '40px', color: '#94a3b8', maxWidth: '1200px', margin: '0 auto' }}>
@@ -27,7 +28,7 @@ function App() {
         {/* Luồng Admin (Quản trị viên) */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Placeholder title="Tổng quan kinh doanh" />} />
-          <Route path="phim" element={<Placeholder title="Quản lý phim" />} />
+          <Route path="phim" element={<QuanLyPhim />} />
           <Route path="phong-chieu" element={<PhongChieu />} />
           <Route path="suat-chieu" element={<Placeholder title="Quản lý suất chiếu" />} />
           <Route path="don-hang" element={<Placeholder title="Quản lý vé & đơn hàng" />} />

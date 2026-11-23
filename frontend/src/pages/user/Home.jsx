@@ -1,72 +1,65 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './Home.css'
-import { useState, useEffect } from 'react'
 
-// Dữ liệu mẫu tạm thời (sau khi làm xong API /phim bên Laravel sẽ fetch thay vào đây)
-const MOCK_MOVIES = [
-  {
-    id: 1,
-    ten_phim: 'Godzilla Minus One',
-    the_loai: 'Hành động • Khoa học viễn tưởng',
-    thoi_luong: 125,
-    danh_gia: 8.9,
-    poster: '/images/Godzilla.jpg',
-  },
-  {
-    id: 2,
-    ten_phim: 'Dune: Hành Tinh Cát 2',
-    the_loai: 'Phiêu lưu • Viễn tưởng',
-    thoi_luong: 166,
-    danh_gia: 8.8,
-    poster: '/images/Dune2.jpg',
-  },
-  {
-    id: 3,
-    ten_phim: 'The Odyssey',
-    the_loai: 'Phiêu lưu • Hành động',
-    thoi_luong: 180,
-    danh_gia: 8.7,
-    poster: '/images/Odyssey.jpg',
-  },
-  {
-    id: 4,
-    ten_phim: 'Spider-Man: Across the Spider-Verse',
-    the_loai: 'Hoạt hình • Hành động',
-    thoi_luong: 140,
-    danh_gia: 9.0,
-    poster: '/images/SpiderVerse.jpg',
-  },
-  {
-    id: 5,
-    ten_phim: 'Interstellar',
-    the_loai: 'Khoa học viễn tưởng',
-    thoi_luong: 169,
-    danh_gia: 9.1,
-    poster: '/images/Interstellar.jpg',
-  },
-]
+const API_URL = import.meta.env.VITE_API_URL || 'https://ahcinema.click/public/api'
 
 function Home() {
+  const [movies, setMovies] = useState([])
+  const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
 
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const res = await fetch(`${API_URL}/phim?trang_thai=dang_chieu`)
+        const data = await res.json()
+        setMovies(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error('Lỗi tải phim trang chủ:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMovies()
+  }, [])
+
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? MOCK_MOVIES.length - 1 : prev - 1))
+    if (movies.length === 0) return
+    setCurrentIndex((prev) => (prev === 0 ? movies.length - 1 : prev - 1))
   }
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === MOCK_MOVIES.length - 1 ? 0 : prev + 1))
+    if (movies.length === 0) return
+    setCurrentIndex((prev) => (prev === movies.length - 1 ? 0 : prev + 1))
   }
 
-  // Tự động chuyển poster mỗi 5 giây (reset lại bộ đếm mỗi khi bạn bấm nút)
   useEffect(() => {
+    if (movies.length <= 1) return
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev === MOCK_MOVIES.length - 1 ? 0 : prev + 1))
+      setCurrentIndex((prev) => (prev === movies.length - 1 ? 0 : prev + 1))
     }, 5000)
-
     return () => clearInterval(timer)
-  }, [currentIndex])
+  }, [currentIndex, movies.length])
 
-  const featured = MOCK_MOVIES[currentIndex]
+  if (loading) {
+    return (
+      <div className="home-container" style={{ textAlign: 'center', padding: '80px 24px', color: '#94a3b8' }}>
+        Đang tải danh sách phim...
+      </div>
+    )
+  }
+
+  if (movies.length === 0) {
+    return (
+      <div className="home-container" style={{ textAlign: 'center', padding: '80px 24px', color: '#94a3b8' }}>
+        <h2 style={{ color: '#f8fafc', marginBottom: '8px' }}>Chưa có phim đang chiếu</h2>
+        <p>Hãy vào trang Admin → Quản lý phim để thêm phim mới.</p>
+      </div>
+    )
+  }
+
+  const featured = movies[currentIndex] || movies[0]
 
   return (
     <div className="home-container">
@@ -74,34 +67,29 @@ function Home() {
       <section className="home-hero">
         <img
           key={featured.id}
-          src={featured.poster}
-          alt={featured.ten_phim}
+          src={featured.anh_poster || '/images/godzilla.jpg'}
+          alt={featured.tieu_de}
           className="home-hero-bg"
         />
         <div className="home-hero-overlay" />
 
-        {/* Nút chuyển trái / phải */}
-        <button
-          onClick={handlePrev}
-          className="home-hero-nav prev"
-          aria-label="Phim trước"
-        >
-          ‹
-        </button>
-        <button
-          onClick={handleNext}
-          className="home-hero-nav next"
-          aria-label="Phim tiếp theo"
-        >
-          ›
-        </button>
+        {movies.length > 1 && (
+          <>
+            <button onClick={handlePrev} className="home-hero-nav prev" aria-label="Phim trước">
+              ‹
+            </button>
+            <button onClick={handleNext} className="home-hero-nav next" aria-label="Phim tiếp theo">
+              ›
+            </button>
+          </>
+        )}
 
         <div className="home-hero-content">
-          <span className="home-hero-tag">PHIM NỔI BẬT • IMAX / 2D</span>
-          <h1 className="home-hero-title">{featured.ten_phim}</h1>
+          <span className="home-hero-tag">PHIM ĐANG CHIẾU • {featured.thoi_luong} PHÚT</span>
+          <h1 className="home-hero-title">{featured.tieu_de}</h1>
           <p className="home-hero-desc">
-            {featured.the_loai} • {featured.thoi_luong} phút. Đặt vé trực tuyến nhanh chóng, chọn ghế
-            VIP theo thời gian thực tại AHCinema.
+            {featured.mo_ta ||
+              'Đặt vé trực tuyến nhanh chóng, chọn ghế VIP theo thời gian thực tại AHCinema.'}
           </p>
           <div className="home-hero-actions">
             <Link to={`/phim/${featured.id}`} className="home-btn-book">
@@ -113,20 +101,21 @@ function Home() {
           </div>
         </div>
 
-        {/* Chấm chỉ báo (Dots) ở góc dưới */}
-        <div className="home-hero-dots">
-          {MOCK_MOVIES.map((phim, index) => (
-            <button
-              key={phim.id}
-              onClick={() => setCurrentIndex(index)}
-              className={`home-hero-dot ${index === currentIndex ? 'active' : ''}`}
-              aria-label={`Chọn ${phim.ten_phim}`}
-            />
-          ))}
-        </div>
+        {movies.length > 1 && (
+          <div className="home-hero-dots">
+            {movies.map((phim, index) => (
+              <button
+                key={phim.id}
+                onClick={() => setCurrentIndex(index)}
+                className={`home-hero-dot ${index === currentIndex ? 'active' : ''}`}
+                aria-label={`Chọn ${phim.tieu_de}`}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Danh sách phim đang chiếu (giữ nguyên) */}
+      {/* Danh sách phim đang chiếu */}
       <section>
         <div className="home-section-header">
           <h2 className="home-section-title">Phim đang chiếu</h2>
@@ -136,18 +125,22 @@ function Home() {
         </div>
 
         <div className="home-movie-grid">
-          {MOCK_MOVIES.map((phim) => (
+          {movies.map((phim) => (
             <div key={phim.id} className="home-movie-card">
               <div className="home-poster-wrap">
-                <img src={phim.poster} alt={phim.ten_phim} className="home-poster" />
-                <span className="home-rating-badge">★ {phim.danh_gia}</span>
+                <img
+                  src={phim.anh_poster || '/images/godzilla.jpg'}
+                  alt={phim.tieu_de}
+                  className="home-poster"
+                />
+                <span className="home-rating-badge">{phim.thoi_luong}p</span>
               </div>
 
               <div className="home-movie-info">
                 <div>
-                  <h3 className="home-movie-title">{phim.ten_phim}</h3>
+                  <h3 className="home-movie-title">{phim.tieu_de}</h3>
                   <div className="home-movie-meta">
-                    {phim.the_loai} • {phim.thoi_luong}p
+                    Khởi chiếu: {phim.ngay_cong_chieu || 'Đang cập nhật'}
                   </div>
                 </div>
 
