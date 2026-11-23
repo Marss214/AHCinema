@@ -9,8 +9,25 @@ const TRANG_THAI_LABEL = {
   ngung_chieu: 'Ngừng chiếu',
 }
 
+// Danh sách tag thể loại có sẵn (dùng chung cho cả Admin và trang Catalog sau này)
+export const DANH_SACH_THE_LOAI = [
+  'Hành động',
+  'Khoa học viễn tưởng',
+  'Kinh dị',
+  'Hoạt hình',
+  'Tình cảm',
+  'Hài hước',
+  'Phiêu lưu',
+  'Tâm lý',
+  'Chính kịch',
+  'Gia đình',
+  'Thần thoại',
+  'Tài liệu',
+]
+
 const INITIAL_FORM = {
   tieu_de: '',
+  the_loai: [],
   mo_ta: '',
   thoi_luong: 120,
   ngay_cong_chieu: '',
@@ -18,21 +35,20 @@ const INITIAL_FORM = {
   trang_thai: 'dang_chieu',
 }
 
-
 function QuanLyPhim() {
-const [posterFile, setPosterFile] = useState(null)
-const [posterPreview, setPosterPreview] = useState('')
   const [dsPhim, setDsPhim] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterTag, setFilterTag] = useState('')
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(INITIAL_FORM)
+  const [posterFile, setPosterFile] = useState(null)
+  const [posterPreview, setPosterPreview] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
 
   const getTodayString = () => {
     const now = new Date()
@@ -43,6 +59,7 @@ const [posterPreview, setPosterPreview] = useState('')
   }
 
   const today = getTodayString()
+
   const fetchPhim = async () => {
     try {
       setLoading(true)
@@ -71,8 +88,16 @@ const [posterPreview, setPosterPreview] = useState('')
 
   const openEditModal = (phim) => {
     setEditingId(phim.id)
+    const parsedTags = phim.the_loai
+      ? phim.the_loai
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : []
+
     setFormData({
       tieu_de: phim.tieu_de || '',
+      the_loai: parsedTags,
       mo_ta: phim.mo_ta || '',
       thoi_luong: phim.thoi_luong || 120,
       ngay_cong_chieu: phim.ngay_cong_chieu || '',
@@ -83,6 +108,18 @@ const [posterPreview, setPosterPreview] = useState('')
     setPosterPreview(phim.anh_poster || '')
     setErrorMsg('')
     setShowModal(true)
+  }
+
+  const toggleTag = (tag) => {
+    setFormData((prev) => {
+      const exists = prev.the_loai.includes(tag)
+      return {
+        ...prev,
+        the_loai: exists
+          ? prev.the_loai.filter((item) => item !== tag)
+          : [...prev.the_loai, tag],
+      }
+    })
   }
 
   const handleFileChange = (e) => {
@@ -101,6 +138,7 @@ const [posterPreview, setPosterPreview] = useState('')
     try {
       const payload = new FormData()
       payload.append('tieu_de', formData.tieu_de)
+      payload.append('the_loai', formData.the_loai.join(', '))
       payload.append('mo_ta', formData.mo_ta || '')
       payload.append('thoi_luong', formData.thoi_luong)
       payload.append('ngay_cong_chieu', formData.ngay_cong_chieu || '')
@@ -162,7 +200,8 @@ const [posterPreview, setPosterPreview] = useState('')
   const filteredPhim = dsPhim.filter((p) => {
     const matchName = p.tieu_de.toLowerCase().includes(search.toLowerCase())
     const matchStatus = filterStatus ? p.trang_thai === filterStatus : true
-    return matchName && matchStatus
+    const matchTag = filterTag ? (p.the_loai || '').includes(filterTag) : true
+    return matchName && matchStatus && matchTag
   })
 
   return (
@@ -170,7 +209,7 @@ const [posterPreview, setPosterPreview] = useState('')
       <div className="qlp-header">
         <div>
           <h1 className="qlp-title">Quản lý phim</h1>
-          <p className="qlp-subtitle">Thêm, chỉnh sửa thông tin và trạng thái công chiếu</p>
+          <p className="qlp-subtitle">Thêm, chỉnh sửa thông tin, thể loại và trạng thái công chiếu</p>
         </div>
         <button className="qlp-btn-add" onClick={openAddModal}>
           + Thêm phim mới
@@ -185,6 +224,18 @@ const [posterPreview, setPosterPreview] = useState('')
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <select
+          className="qlp-filter"
+          value={filterTag}
+          onChange={(e) => setFilterTag(e.target.value)}
+        >
+          <option value="">Tất cả thể loại</option>
+          {DANH_SACH_THE_LOAI.map((tag) => (
+            <option key={tag} value={tag}>
+              {tag}
+            </option>
+          ))}
+        </select>
         <select
           className="qlp-filter"
           value={filterStatus}
@@ -202,6 +253,7 @@ const [posterPreview, setPosterPreview] = useState('')
           <thead>
             <tr>
               <th>Phim</th>
+              <th>Thể loại</th>
               <th>Thời lượng</th>
               <th>Ngày công chiếu</th>
               <th>Trạng thái</th>
@@ -211,14 +263,14 @@ const [posterPreview, setPosterPreview] = useState('')
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="qlp-empty">
+                <td colSpan="6" className="qlp-empty">
                   Đang tải danh sách phim...
                 </td>
               </tr>
             ) : filteredPhim.length === 0 ? (
               <tr>
-                <td colSpan="5" className="qlp-empty">
-                  Chưa có phim nào. Bấm "+ Thêm phim mới" để tạo dữ liệu.
+                <td colSpan="6" className="qlp-empty">
+                  Chưa có phim nào phù hợp.
                 </td>
               </tr>
             ) : (
@@ -235,6 +287,19 @@ const [posterPreview, setPosterPreview] = useState('')
                         <div className="qlp-movie-name">{phim.tieu_de}</div>
                         <div className="qlp-movie-desc">{phim.mo_ta || 'Chưa có mô tả'}</div>
                       </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="qlp-table-tags">
+                      {phim.the_loai ? (
+                        phim.the_loai.split(',').map((tag) => (
+                          <span key={tag.trim()} className="qlp-table-tag">
+                            {tag.trim()}
+                          </span>
+                        ))
+                      ) : (
+                        <span style={{ color: '#64748b', fontSize: '12px' }}>—</span>
+                      )}
                     </div>
                   </td>
                   <td>{phim.thoi_luong} phút</td>
@@ -282,6 +347,26 @@ const [posterPreview, setPosterPreview] = useState('')
                 />
               </div>
 
+              <div className="qlp-form-group">
+                <label>Thể loại (bấm để chọn nhiều)</label>
+                <div className="qlp-tag-picker">
+                  {DANH_SACH_THE_LOAI.map((tag) => {
+                    const isSelected = formData.the_loai.includes(tag)
+                    return (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        className={`qlp-tag-chip ${isSelected ? 'selected' : ''}`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}
+                        {tag}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div className="qlp-form-grid">
                 <div className="qlp-form-group">
                   <label>Thời lượng (phút) *</label>
@@ -309,7 +394,7 @@ const [posterPreview, setPosterPreview] = useState('')
                 </div>
               </div>
 
-             <div className="qlp-form-grid">
+              <div className="qlp-form-grid">
                 <div className="qlp-form-group">
                   <label>Ảnh poster (JPG, PNG, WEBP ≤ 2MB)</label>
                   <input

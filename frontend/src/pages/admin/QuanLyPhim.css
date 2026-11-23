@@ -344,3 +344,52 @@
 .qlp-form-group input[type='date']::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+.qlp-tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background-color: #0b0f19;
+  border: 1px solid #334155;
+  border-radius: 8px;
+}
+
+.qlp-tag-chip {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.qlp-tag-chip:hover {
+  border-color: #64748b;
+  color: #fff;
+}
+
+.qlp-tag-chip.selected {
+  background-color: rgba(244, 63, 94, 0.2);
+  border-color: #f43f5e;
+  color: #fda4af;
+  font-weight: 600;
+}
+
+/* Tag hiển thị trong bảng */
+.qlp-table-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 200px;
+}
+
+.qlp-table-tag {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+}

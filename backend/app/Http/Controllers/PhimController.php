@@ -10,13 +10,17 @@ class PhimController extends Controller
     // Lấy danh sách phim (có thể lọc theo ?trang_thai=dang_chieu)
     public function index(Request $request)
     {
-        $query = Phim::orderByDesc('id');
+       $query = Phim::orderByDesc('id');
 
-        if ($request->has('trang_thai') && $request->trang_thai !== '') {
-            $query->where('trang_thai', $request->trang_thai);
-        }
+    if ($request->filled('trang_thai')) {
+        $query->where('trang_thai', $request->trang_thai);
+    }
 
-        return response()->json($query->get());
+    if ($request->filled('the_loai')) {
+        $query->where('the_loai', 'like', '%' . $request->the_loai . '%');
+    }
+
+    return response()->json($query->get());
     }
 
     // Xem chi tiết 1 phim
@@ -35,6 +39,7 @@ class PhimController extends Controller
     {
         $validated = $request->validate([
             'tieu_de' => 'required|string|max:255',
+            'the_loai' => 'nullable|string|max:255',
             'mo_ta' => 'nullable|string',
             'thoi_luong' => 'required|integer|min:1|max:500',
             'ngay_cong_chieu' => 'nullable|date|after_or_equal:today',
@@ -70,6 +75,7 @@ class PhimController extends Controller
 
         $validated = $request->validate([
             'tieu_de' => 'required|string|max:255',
+            'the_loai' => 'nullable|string|max:255',
             'mo_ta' => 'nullable|string',
             'thoi_luong' => 'required|integer|min:1|max:500',
             'ngay_cong_chieu' => 'nullable|date',
